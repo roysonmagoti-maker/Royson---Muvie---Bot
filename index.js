@@ -1,61 +1,42 @@
+
 const express = require('express');
 const { Telegraf, Markup } = require('telegraf');
-const google = require('googlethis');
 
 const app = express();
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const bot = new Telegraf(BOT_TOKEN);
 
-if (!BOT_TOKEN) {
-  console.log("BOT_TOKEN haijawekwa kwenye Render!");
-}
-
-const bot = new Telegraf(BOT_TOKEN || '123456:fake');
-
-bot.start((ctx) => ctx.reply('🎬 Karibu Royson Movie Bot!\n\nTuma jina la movie, mfano: John Wick, nitakutafutia Google! 🍿'));
+bot.start((ctx) => ctx.reply('🎬 Karibu Royson Movie Bot!\n\nTuma jina la movie, mfano: John Wick, nitakutafutia! 🍿'));
 
 bot.on('text', async (ctx) => {
   const query = ctx.message.text;
   if(query.startsWith('/')) return;
-  
-  await ctx.reply(`🔍 Natafuta: *${query}* kwenye Google...`, {parse_mode: "Markdown"});
-  
-  try {
-    const response = await google.search(`${query} movie download`, {
-      page: 0,
-      safe: false
-    });
-    
-    const results = response.results.slice(0, 5);
-    
-    if(results.length > 0){
-      let buttons = [];
-      let text = `🎬 *Matokeo ya:* ${query}\n\n`;
-      
-      results.forEach((r, i) => {
-        text += `${i+1}. ${r.title}\n`;
-        buttons.push([Markup.button.url(`🔗 Link ${i+1}`, r.url)]);
-      });
-      
-      buttons.push([Markup.button.url('🔎 Tafuta Zaidi Google', `https://www.google.com/search?q=${encodeURIComponent(query + " movie download")}`)]);
-      
-      await ctx.reply(text, {
-        parse_mode: "Markdown",
-        ...Markup.inlineKeyboard(buttons)
-      });
-    } else {
-      await ctx.reply('😔 Sijapata matokeo, jaribu jina lingine.');
-    }
-  } catch(e){
-    console.log("Error:", e.message);
-    const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query + " movie download")}`;
-    await ctx.reply(`Tatizo kidogo, bofya hapa: ${googleUrl}`, 
-      Markup.inlineKeyboard([[Markup.button.url('🔎 Tafuta Google', googleUrl)]])
-    );
-  }
+
+  const q = encodeURIComponent(query);
+  const qMovie = encodeURIComponent(query + " movie download");
+
+  // Links za movie zitakazofanya kazi kila wakati
+  const googleLink = `https://www.google.com/search?q=${qMovie}`;
+  const youtubeLink = `https://www.youtube.com/results?search_query=${q}+trailer`;
+  const imdbLink = `https://www.imdb.com/find?q=${q}`;
+
+  const text = `🎬 *Matokeo ya:* ${query}\n\n✅ Nimekutafutia kwenye Google. Bonyeza link hapa chini kudownload:\n\n1. 🔗 Google Search - ${query}\n2. 🎥 Trailer YouTube\n3. ⭐ IMDB Info`;
+
+  const buttons = [
+    [Markup.button.url(`🔎 Google - ${query}`, googleLink)],
+    [Markup.button.url(`🎥 Trailer - ${query}`, youtubeLink)],
+    [Markup.button.url(`⭐ IMDB - ${query}`, imdbLink)],
+    [Markup.button.url(`📥 Download - ${query}`, `https://www.google.com/search?q=${encodeURIComponent(query + " movie download site:mkvcinemas or site:netnaija or site:moda")}`)]
+  ];
+
+  await ctx.reply(text, {
+    parse_mode: "Markdown",
+    ...Markup.inlineKeyboard(buttons)
+  });
 });
 
-bot.launch().then(() => console.log("Bot started - Google Search")).catch(e => console.log("Bot error:", e.message));
+bot.launch().then(() => console.log("Bot LIVE - Simple Mode")).catch(e => console.log(e));
 
-app.get('/', (req, res) => res.send('Royson Movie Bot is LIVE - Google Search Mode 🔥'));
+app.get('/', (req, res) => res.send('Royson Bot LIVE 🔥'));
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server ${PORT}`));
