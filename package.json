@@ -1,3 +1,4 @@
+
 {
   "name": "royson-movie-bot",
   "version": "1.0.0",
@@ -5,6 +6,7 @@
   "scripts": { "start": "node index.js" },
   "dependencies": {
     "express": "^4.18.2",
-    "telegraf": "^4.15.0"
+    "telegraf": "^4.15.0",
+    "googlethis": "^1.1.7"
   }
 }
