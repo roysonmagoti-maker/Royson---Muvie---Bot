@@ -9,7 +9,7 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 console.log('Royson Bot with DIRECT Movies LIVE');
 
 const CHANNEL_ID = "@RoysonTafsiriStore"; 
-const MOVIE_MSG_ID = 2; // Hii ndio ID ya video ya Mtoto wa ajabu. Kama haifanyi kazi badilisha kuwa 1 au 3
+const MOVIE_MSG_ID = 3; // Hii ndio ID ya video ya Mtoto wa ajabu. Kama haifanyi kazi badilisha kuwa 1 au 3
 
 const MENU = {
   reply_markup: {
