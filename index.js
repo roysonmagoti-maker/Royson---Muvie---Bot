@@ -1,71 +1,38 @@
 const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
-
 const app = express();
-app.get('/', (req,res)=> res.send('Royson Bot Live - Direct Movies'));
+app.get('/', (req,res)=> res.send('Bot Live'));
 app.listen(process.env.PORT || 3000);
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
-console.log('Royson Bot with DIRECT Movies LIVE');
+console.log("Bot LIVE - Direct Mode");
 
-const CHANNEL_ID = "@RoysonTafsiriStore"; 
-const MOVIE_MSG_ID = 3; // Hii ndio ID ya video ya Mtoto wa ajabu. Kama haifanyi kazi badilisha kuwa 1 au 3
-
-const MENU = {
-  reply_markup: {
-    inline_keyboard: [
-      [{text:'🇰🇷 Korea Tafsiri', callback_data:'korea'}, {text:'🇨🇳 China Tafsiri', callback_data:'china'}],
-      [{text:'🇳🇬 Nigeria Tafsiri', callback_data:'naija'}, {text:'🇵🇭 Filipino', callback_data:'filipino'}],
-      [{text:'🇹🇷 Kituruki Tafsiri', callback_data:'turkey'}, {text:'🇮🇳 Kihindi Tafsiri', callback_data:'india'}],
-      [{text:'🎬 Single Movie Tafsiri', callback_data:'single'}],
-      [{text:'🎬 Bongo Movie Tafsiri', callback_data:'bongo'}]
-    ]
-  }
-};
+// Hii ni FILE_ID ya Mtoto wa ajabu - tutaipata sasa hivi
+let MOVIE_FILE_ID = null;
+let MOVIE_CAPTION = "🎬 Mtoto wa ajabu (128MB) - Royson Tafsiri Store";
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  const text = (msg.text || "").toLowerCase();
-
-  // MANENO YOTE YAKIANDIKWA - TUMA MOVIE DIRECT
-  if(text.includes("kigodoro") || text.includes("miujiza") || text.includes("mtoto") || text.includes("ajabu") || text.includes("kituruki") || text.includes("bongo")){
-    await bot.sendMessage(chatId, "🔥 Inatumwa... Mtoto wa ajabu (128MB) - Direct bila matangazo!");
-    try{
-      await bot.copyMessage(chatId, CHANNEL_ID, MOVIE_MSG_ID);
-      await bot.sendMessage(chatId, "✅ Imefika! Enjoy Royson Tafsiri Store!", MENU);
-    }catch(e){
-      await bot.sendMessage(chatId, "❌ Bot bado si Admin kwenye @RoysonTafsiriStore! Nenda Channel > Add Admin > Muvie Search Tz");
-    }
+  
+  // Kama umetuma VIDEO yenyewe kwa bot - itahifadhi FILE_ID
+  if(msg.video || msg.document){
+    const fileId = msg.video ? msg.video.file_id : msg.document.file_id;
+    await bot.sendMessage(chatId, `✅ FILE_ID ya movie hii ni:\n\n${fileId}\n\nNakili hii uibandike kwenye code!`);
+    console.log("FILE_ID:", fileId);
+    MOVIE_FILE_ID = fileId;
     return;
   }
 
-  // Kama ni /start
-  if(text === "/start"){
-    bot.sendMessage(chatId, "Karibu Royson Muvie Search Tz 🎬\nAndika jina la movie: Kigodoro, Miujiza, Bongo", MENU);
-  } else {
-    // Search nyingine zote pia peleka direct
-    bot.sendMessage(chatId, `🔍 Matokeo ya ${msg.text} :\n\n🎬 Ipo! Bonyeza hapa kutazama DIRECT:`, {
-      reply_markup: {
-        inline_keyboard: [
-          [{text: '▶️ TAZAMA MTOTO WA AJABU (128MB) DIRECT', callback_data: 'direct_movie'}],
-          [{text: '⬅️ Menu', callback_data: 'menu'}]
-        ]
-      }
-    });
-  }
-});
-
-bot.on('callback_query', async (cq) => {
-  const chatId = cq.message.chat.id;
-  if(cq.data === 'direct_movie' || cq.data === 'bongo' || cq.data === 'turkey' || cq.data === 'single'){
-    try{
-      await bot.copyMessage(chatId, CHANNEL_ID, MOVIE_MSG_ID);
-    }catch(e){
-      bot.sendMessage(chatId, "❌ Add bot kama Admin kwenye Channel kwanza!");
+  const text = (msg.text || "").toLowerCase();
+  
+  if(text.includes("kigodoro") || text.includes("mtoto") || text.includes("ajabu") || text.includes("miujiza")){
+    if(MOVIE_FILE_ID){
+      await bot.sendVideo(chatId, MOVIE_FILE_ID, {caption: MOVIE_CAPTION});
+    } else {
+      // Bado hatujaihifadhi - tuma maelekezo
+      await bot.sendMessage(chatId, "⚠️ Bado sijaihifadhi movie!\n\nTuma kwanza hiyo video ya Mtoto wa ajabu 128MB HAPA KWENYE BOT kama file/video, sio kwenye Channel. Nikishai-pata nitaituma direct kwa kila mtu!");
     }
+  } else if(msg.text === "/start"){
+    await bot.sendMessage(chatId, "Karibu Royson Muvie Search Tz 🎬\nAndika: Kigodoro au Mtoto wa ajabu");
   }
-  if(cq.data === 'menu'){
-    bot.sendMessage(chatId, "Chagua Kategoria:", MENU);
-  }
-  bot.answerCallbackQuery(cq.id);
 });
