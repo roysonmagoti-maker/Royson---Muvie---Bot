@@ -3,50 +3,42 @@ const express = require('express');
 
 const token = process.env.BOT_TOKEN;
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.get('/', (req,res)=>res.send('Burudani Live'));
+app.listen(process.env.PORT || 3000, ()=>console.log("Server On"));
 
-app.get('/', (req, res) => res.send('Burudani Video Bot Live!'));
-app.listen(PORT, () => console.log(`Server on ${PORT}`));
+const bot = new TelegramBot(token, {polling: true});
+console.log("Burudani Bot READY");
 
-const bot = new TelegramBot(token, { polling: true });
-console.log("Burudani Bot Inawaka...");
+// Video za mfano - baadaye utabadilisha na link zako
+const MOVIES = {
+  maigizo: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+  comedy: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+  season: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+  default: "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4"
+};
 
-// Karibu
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, 
-    "🔥 Karibu Burudani Video Bot! 🎬\n\n" +
-    "Andika jina la movie yoyote mfano:\n" +
-    "Matrix\nJohn Wick\nAvatar\n\n" +
-    "Au andika /movie upate burudani ya leo!"
+bot.onText(/\/start/, (msg)=>{
+  bot.sendMessage(msg.chat.id,
+    "🔥 *Karibu Burudani Video Bot* 🎬\n\nAndika tu aina ya burudani:\n- Maigizo\n- Comedy\n- Season\n- Action\n\nAu /movie kupata ya leo!",
+    {parse_mode:"Markdown"}
   );
 });
 
-// /movie
-bot.onText(/\/movie/, async (msg) => {
-  const chatId = msg.chat.id;
-  try {
-    await bot.sendMessage(chatId, "🎬 Inakuletea burudani...");
-    await bot.sendVideo(chatId, "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4", {
-      caption: "🎬 Burudani ya Leo!\n\nAndika jina la movie unayotaka 👇"
-    });
-  } catch (e) {
-    bot.sendMessage(chatId, "Jaribu tena /movie");
-  }
+bot.onText(/\/movie/, async (msg)=>{
+  await bot.sendVideo(msg.chat.id, MOVIES.default, {caption:"🎬 Burudani ya Leo - Enjoy!"});
 });
 
-// Kama mtu akiandika jina la movie (mfano Matrix)
-bot.on('message', (msg) => {
-  const text = msg.text;
-  if (!text || text.startsWith('/')) return; // isirudie /start
+bot.on('message', async (msg)=>{
+  const text = msg.text?.toLowerCase();
+  if(!text || text.startsWith('/')) return;
 
-  const chatId = msg.chat.id;
-  const movie = text.trim();
+  let video = MOVIES.default;
+  if(text.includes('maigizo')) video = MOVIES.maigizo;
+  else if(text.includes('comedy')) video = MOVIES.comedy;
+  else if(text.includes('season')) video = MOVIES.season;
 
-  bot.sendMessage(chatId, 
-    `🔍 Unatafuta: *${movie}* ?\n\n` +
-    `Kwa sasa bado tunaunganisha na database ya movies.\n` +
-    `Lakini /movie inafanya kazi - jaribu! 🎬\n\n` +
-    `Next step tutaunganisha na API ya kweli ya movie.`,
-    { parse_mode: 'Markdown' }
-  );
+  bot.sendMessage(msg.chat.id, `🔍 Inatafuta *${msg.text}*...`, {parse_mode:"Markdown"});
+  setTimeout(()=>{
+    bot.sendVideo(msg.chat.id, video, {caption:`🎬 Hapa Burudani yako ya: *${msg.text}* \n\nAndika nyingine 👇`, parse_mode:"Markdown"});
+  }, 1000);
 });
