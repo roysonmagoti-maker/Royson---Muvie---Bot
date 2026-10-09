@@ -52,5 +52,5 @@ bot.on('message', (msg)=>{
 });
 
 bot.on('callback_query', (q)=>{
- bot.sendMessage(q.message.chat.id, "💰 Malipo: Tigo Pesa 0655 XXX XXX\nBaada ya kulipa /nimelipa");
+ bot.sendMessage(q.message.chat.id, "💰 Malipo: MPesa 0792747560\nBaada ya kulipa /nimelipa");
 });
