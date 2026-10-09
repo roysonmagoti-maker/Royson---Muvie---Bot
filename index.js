@@ -1,133 +1,77 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const fs = require('fs');
-
 const token = process.env.BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_ID; // ID yako ya Telegram
+const ADMIN_ID = process.env.ADMIN_ID || "";
 const app = express();
 app.get('/', (req,res)=>res.send('Burudani Bot Live'));
 app.listen(process.env.PORT || 3000);
-
 const bot = new TelegramBot(token, {polling: true});
-console.log("🔥 BURUDANI PAY BOT READY");
+console.log("🔥 BURUDANI PAY BOT READY - ADMIN:"+ADMIN_ID);
 
-// Database rahisi - itatunza movie zako
 let movies = {};
-try{ movies = JSON.parse(fs.readFileSync('movies.json')); } catch(e){ movies = {}; }
+try{
+  if(fs.existsSync('movies.json')){
+    movies = JSON.parse(fs.readFileSync('movies.json','utf8') || "{}");
+  }
+} catch(e){ console.log("DB Error", e); movies = {}; }
 function saveMovies(){ fs.writeFileSync('movies.json', JSON.stringify(movies, null, 2)); }
 
-// START
 bot.onText(/\/start/, (msg)=>{
   bot.sendMessage(msg.chat.id,
 `🔥 *Karibu Burudani Video Bot* 🎬
 
-Andika jina la movie yoyote mf:
+Andika jina la movie mf:
 *Matrix, IP MAN, Mad Max*
 
-Bot itakuletea Trailer kwanza, ukipenda unalipia kupata Full Movie.
+Ntakuletea Trailer + Link ya Google.
 
-Admin: /addmovie - kuweka movie mpya`, {parse_mode:"Markdown"});
+Admin: /addmovie JINA | LINK TRAILER | FILE_ID`, {parse_mode:"Markdown"});
 });
 
-// ADMIN - KUWEKA MOVIE
-// Matumizi: /addmovie Matrix | https://youtube.com/trailer | https://t.me/channel/123
 bot.onText(/\/addmovie (.+)/, (msg, match)=>{
-  if(msg.from.id.toString()!== ADMIN_ID){
-    return bot.sendMessage(msg.chat.id, "❌ Wewe sio Admin");
+  if(ADMIN_ID && msg.from.id.toString()!== ADMIN_ID){
+    return bot.sendMessage(msg.chat.id, "❌ Wewe sio Admin. ID yako: "+msg.from.id);
   }
   const parts = match[1].split('|').map(s=>s.trim());
-  if(parts.length < 3) return bot.sendMessage(msg.chat.id, "Format: /addmovie Jina | Link ya Trailer | Link ya Movie/ FileID");
-
+  if(parts.length < 3) return bot.sendMessage(msg.chat.id, "Format: /addmovie Jina | Link Trailer | FileID");
   const [jina, trailer, file] = parts;
-  movies[jina.toLowerCase()] = { jina, trailer, file, price: 1000 };
+  movies[jina.toLowerCase()] = { jina, trailer, file };
   saveMovies();
-  bot.sendMessage(msg.chat.id, `✅ Movie imewekwa: *${jina}*`, {parse_mode:"Markdown"});
+  bot.sendMessage(msg.chat.id, `✅ Imewekwa: *${jina}*`, {parse_mode:"Markdown"});
 });
 
-// USER SEARCH - Kila kitu
 bot.on('message', async (msg)=>{
+  if(!msg.text || msg.text.startsWith('/')) return;
   const chatId = msg.chat.id;
   const text = msg.text;
-  if(!text || text.startsWith('/')) return;
-
   const key = text.toLowerCase();
+  console.log("Search:", key);
 
-  // 1. TAFUTA KWENYE DATABASE YAKO
   let foundKey = Object.keys(movies).find(k => key.includes(k) || k.includes(key));
-
   if(foundKey){
     const m = movies[foundKey];
-    await bot.sendMessage(chatId, `🎬 *Inatafuta ${m.jina}...*`, {parse_mode:"Markdown"});
-
-    // Tuma Trailer
-    await bot.sendMessage(chatId, `🎥 *Trailer ya ${m.jina}:*\n${m.trailer}\n\nHii ni muonekano tu.`, {parse_mode:"Markdown"});
-
-    // Leta Button ya Kulipia
-    return bot.sendMessage(chatId, `💰 Unataka Full Movie ya *${m.jina}*?\nBei: TZS 1,000\n\nBonyeza kulipia:`, {
-      parse_mode:"Markdown",
-      reply_markup:{
-        inline_keyboard:[
-          [{text:"💳 LIPIA SASA - TZS 1000", callback_data:`pay_${foundKey}`}],
-          [{text:"📞 Wasiliana na Admin", url:"https://t.me/Royson_admin"}] // badilisha username yako
-        ]
-      }
+    await bot.sendMessage(chatId, `🎥 *Trailer ya ${m.jina}:*\n${m.trailer}`, {parse_mode:"Markdown"});
+    return bot.sendMessage(chatId, `💰 Full Movie - TZS 1000`, {
+      reply_markup:{ inline_keyboard:[ [{text:"💳 LIPIA SASA", callback_data:`pay_${foundKey}`}] ] }
     });
   } else {
-    // 2. KAMA HAIPO - TUMA GOOGLE / YOUTUBE
-    const googleLink = `https://www.google.com/search?q=${encodeURIComponent(text + " movie trailer")}`;
-    const youtubeLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(text + " trailer")}`;
-
+    const yt = `https://www.youtube.com/results?search_query=${encodeURIComponent(text+" trailer")}`;
+    const gg = `https://www.google.com/search?q=${encodeURIComponent(text+" movie")}`;
     return bot.sendMessage(chatId,
-`😔 Samahani, sina movie ya *${text}* kwenye database bado.
+`😔 Sina *${text}* bado.
 
-Lakini nimekutafutia hapa:
+🔍 Tafuta hapa:
+🎬 YouTube Trailer: ${yt}
+🌍 Google: ${gg}
 
-🎬 *Trailer YouTube:*
-${youtubeLink}
-
-🔍 *Google:*
-${googleLink}
-
-Andika jina lingine au subiri Admin aiongeze.`, {parse_mode:"Markdown"});
+Admin ataiongeza hivi karibuni!`, {parse_mode:"Markdown"});
   }
 });
 
-// PAYMENT BUTTON
-bot.on('callback_query', async (query)=>{
-  const chatId = query.message.chat.id;
-  const data = query.data;
-
-  if(data.startsWith('pay_')){
-    const key = data.replace('pay_','');
-    const m = movies[key];
-
-    // HAPA NDIYO SEHEMU YA MALIPO - KWA SASA MANUAL
-    await bot.sendMessage(chatId,
-`💰 *Malipo ya ${m.jina}*
-
-1. Tuma TZS 1000 kwenda:
-   *Tigo Pesa: 0655 XXX XXX* (weka namba yako)
-   *M-Pesa: 0755 XXX XXX*
-
-2. Baada ya kutuma, tuma Screenshot hapa au Andika /nimelipa ${m.jina}
-
-Mara ukithibitisha utatumiwa Movie moja kwa moja!`, {parse_mode:"Markdown"});
-
-    // Kama una FileID ya Telegram, itatuma moja kwa moja hapa
-    // await bot.sendDocument(chatId, m.file);
-  }
-});
-
-// Admin kuthibitisha malipo
-bot.onText(/\/tuma (.+)/, (msg, match)=>{
-  if(msg.from.id.toString()!== ADMIN_ID) return;
-  const parts = match[1].split(' ');
-  const userId = parts[0];
-  const movieKey = parts.slice(1).join(' ').toLowerCase();
-  const m = movies[movieKey];
-  if(!m) return bot.sendMessage(msg.chat.id, "Movie haijapatikana");
-
-  bot.sendMessage(userId, `✅ Malipo yako yamethibitishwa! Hapa movie yako:`);
-  bot.sendVideo(userId, m.file, {caption:`🎬 ${m.jina} - Enjoy!`}); // au sendDocument
-  bot.sendMessage(msg.chat.id, "Imetumwa!");
+bot.on('callback_query', (q)=>{
+  bot.sendMessage(q.message.chat.id,
+`💰 *Malipo: ${q.data}*
+Tigo Pesa: 0655 XXX XXX
+Baada ya kulipa tuma /nimelipa`, {parse_mode:"Markdown"});
 });
