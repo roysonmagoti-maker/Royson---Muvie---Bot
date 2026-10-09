@@ -1,1 +1,22 @@
-{}
+{
+  "ip man": { "jina": "IP MAN", "trailer": "https://youtu.be/1hPp59RvhS8", "file": "pending" },
+  "ip man 2": { "jina": "IP MAN 2", "trailer": "https://youtu.be/6Dq6DqV5l5I", "file": "pending" },
+  "ip man 3": { "jina": "IP MAN 3", "trailer": "https://youtu.be/2t1oLr5y1sU", "file": "pending" },
+  "ip man 4": { "jina": "IP MAN 4", "trailer": "https://youtu.be/dUVpB7_d3b4", "file": "pending" },
+  "mad max": { "jina": "Mad Max Fury Road", "trailer": "https://youtu.be/hEJnMQG9ev8", "file": "pending" },
+  "john wick": { "jina": "John Wick", "trailer": "https://youtu.be/2AUmvWm5ZDQ", "file": "pending" },
+  "john wick 2": { "jina": "John Wick 2", "trailer": "https://youtu.be/XGk2EfbD_P4", "file": "pending" },
+  "fast and furious": { "jina": "Fast and Furious", "trailer": "https://youtu.be/f4fB9XBl4fA", "file": "pending" },
+  "avengers": { "jina": "Avengers Endgame", "trailer": "https://youtu.be/TcMBFSGVi1c", "file": "pending" },
+  "spiderman": { "jina": "Spiderman No Way Home", "trailer": "https://youtu.be/JfVOs4VSpmA", "file": "pending" },
+  "batman": { "jina": "The Batman", "trailer": "https://youtu.be/mqqft2x_Aa4", "file": "pending" },
+  "avatar": { "jina": "Avatar", "trailer": "https://youtu.be/d9MyW72ELq0", "file": "pending" },
+  "matrix": { "jina": "The Matrix", "trailer": "https://youtu.be/vKQi3bBA1y8", "file": "pending" },
+  "extraction": { "jina": "Extraction", "trailer": "https://youtu.be/L6P3nI6VnlY", "file": "pending" },
+  "transformers": { "jina": "Transformers", "trailer": "https://youtu.be/AntcyqJ6brc", "file": "pending" },
+  "rambo": { "jina": "Rambo", "trailer": "https://youtu.be/8GfiV0rV0cQ", "file": "pending" },
+  "aquaman": { "jina": "Aquaman", "trailer": "https://youtu.be/WDkg3h8PCVU", "file": "pending" },
+  "venom": { "jina": "Venom", "trailer": "https://youtu.be/u9Mv98Gr5pQ", "file": "pending" },
+  "deadpool": { "jina": "Deadpool", "trailer": "https://youtu.be/ONHBaC-pfsk", "file": "pending" },
+  "thor": { "jina": "Thor", "trailer": "https://youtu.be/Go8nTmfrQd8", "file": "pending" }
+}
